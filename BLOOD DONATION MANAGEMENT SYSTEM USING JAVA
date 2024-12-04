@@ -1,0 +1,241 @@
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+
+class Donor {
+    private String name;
+    private String bloodType;
+    private int age;
+    private String donationDate;
+
+    public Donor(String name, String bloodType, int age) {
+        this.name = name;
+        this.bloodType = bloodType;
+        this.age = age;
+        this.donationDate = null;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getBloodType() {
+        return bloodType;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public String getDonationDate() {
+        return donationDate;
+    }
+
+    public void setDonationDate(String donationDate) {
+        this.donationDate = donationDate;
+    }
+
+    @Override
+    public String toString() {
+        return "Donor Name: " + name + ", Blood Type: " + bloodType + ", Age: " + age + ", Last Donation Date: " + (donationDate == null ? "No donations yet" : donationDate);
+    }
+}
+
+class BloodBank {
+    private ArrayList<Donor> donors;
+    private int[] bloodInventory = new int[8]; // A+, A-, B+, B-, AB+, AB-, O+, O-
+
+    public BloodBank() {
+        donors = new ArrayList<>();
+    }
+
+    public void registerDonor(Donor donor) {
+        donors.add(donor);
+    }
+
+    public void scheduleDonation(String name, String date) {
+        for (Donor donor : donors) {
+            if (donor.getName().equalsIgnoreCase(name)) {
+                donor.setDonationDate(date);
+                updateInventory(donor.getBloodType());
+                return;
+            }
+        }
+    }
+
+    public ArrayList<Donor> getDonors() {
+        return donors;
+    }
+
+    public String getBloodInventory() {
+        String[] bloodTypes = {"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"};
+        StringBuilder inventory = new StringBuilder();
+        for (int i = 0; i < bloodInventory.length; i++) {
+            inventory.append(bloodTypes[i]).append(": ").append(bloodInventory[i]).append(" units\n");
+        }
+        return inventory.toString();
+    }
+
+    private void updateInventory(String bloodType) {
+        switch (bloodType) {
+            case "A+":
+                bloodInventory[0]++;
+                break;
+            case "A-":
+                bloodInventory[1]++;
+                break;
+            case "B+":
+                bloodInventory[2]++;
+                break;
+            case "B-":
+                bloodInventory[3]++;
+                break;
+            case "AB+":
+                bloodInventory[4]++;
+                break;
+            case "AB-":
+                bloodInventory[5]++;
+                break;
+            case "O+":
+                bloodInventory[6]++;
+                break;
+            case "O-":
+                bloodInventory[7]++;
+                break;
+            default:
+                System.out.println("Unknown blood type.");
+        }
+    }
+}
+
+public class BloodDonationManagementSystemAWT {
+    private static BloodBank bloodBank = new BloodBank();
+    private static Frame mainFrame;
+    private static TextArea donorListArea;
+    private static TextArea inventoryArea;
+    private static TextField nameField, bloodTypeField, ageField, donationDateField;
+
+    public static void main(String[] args) {
+        mainFrame = new Frame("Blood Donation Management System");
+
+        // Setup the layout
+        mainFrame.setLayout(new FlowLayout());
+        mainFrame.setSize(500, 400);
+
+        // Create components
+        Label headerLabel = new Label("Blood Donation Management System");
+        headerLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        
+        Button registerButton = new Button("Register Donor");
+        Button scheduleButton = new Button("Schedule Donation");
+        Button viewDonorsButton = new Button("View Donors");
+        Button viewInventoryButton = new Button("View Inventory");
+        
+        nameField = new TextField(20);
+        bloodTypeField = new TextField(10);
+        ageField = new TextField(3);
+        donationDateField = new TextField(10);
+        
+        donorListArea = new TextArea(10, 40);
+        inventoryArea = new TextArea(10, 40);
+        
+        // Add components to frame
+        mainFrame.add(headerLabel);
+        
+        mainFrame.add(new Label("Name:"));
+        mainFrame.add(nameField);
+        
+        mainFrame.add(new Label("Blood Type:"));
+        mainFrame.add(bloodTypeField);
+        
+        mainFrame.add(new Label("Age:"));
+        mainFrame.add(ageField);
+        
+        mainFrame.add(new Label("Donation Date (dd-mm-yyyy):"));
+        mainFrame.add(donationDateField);
+        
+        mainFrame.add(registerButton);
+        mainFrame.add(scheduleButton);
+        mainFrame.add(viewDonorsButton);
+        mainFrame.add(viewInventoryButton);
+        
+        mainFrame.add(new Label("Registered Donors:"));
+        mainFrame.add(donorListArea);
+        
+        mainFrame.add(new Label("Blood Inventory:"));
+        mainFrame.add(inventoryArea);
+
+        // Register button action
+        registerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String name = nameField.getText();
+                String bloodType = bloodTypeField.getText();
+                int age = Integer.parseInt(ageField.getText());
+                Donor donor = new Donor(name, bloodType, age);
+                bloodBank.registerDonor(donor);
+                clearInputFields();
+                showMessage("Donor " + name + " registered successfully.");
+            }
+        });
+
+        // Schedule button action
+        scheduleButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String name = nameField.getText();
+                String date = donationDateField.getText();
+                bloodBank.scheduleDonation(name, date);
+                clearInputFields();
+                showMessage("Donation scheduled for " + name + " on " + date);
+            }
+        });
+
+        // View donors button action
+        viewDonorsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                donorListArea.setText("");
+                for (Donor donor : bloodBank.getDonors()) {
+                    donorListArea.append(donor.toString() + "\n");
+                }
+            }
+        });
+
+        // View inventory button action
+        viewInventoryButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                inventoryArea.setText(bloodBank.getBloodInventory());
+            }
+        });
+
+        // Display the frame
+        mainFrame.setVisible(true);
+    }
+
+    private static void clearInputFields() {
+        nameField.setText("");
+        bloodTypeField.setText("");
+        ageField.setText("");
+        donationDateField.setText("");
+    }
+
+    private static void showMessage(String message) {
+        Dialog msgDialog = new Dialog(mainFrame, "Message", true);
+        msgDialog.setLayout(new FlowLayout());
+        msgDialog.setSize(250, 100);
+        msgDialog.add(new Label(message));
+        Button okButton = new Button("OK");
+        msgDialog.add(okButton);
+        
+        okButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                msgDialog.setVisible(false);
+            }
+        });
+
+        msgDialog.setVisible(true);
+    }
+}
